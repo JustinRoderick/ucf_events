@@ -1,20 +1,88 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "sqlite"
-    url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@index([name])
+  @@index([name])
+}
+
+model User {
+  id                     String         @id
+  email                  String         @unique
+  password               String
+  comments               Comment[]
+  member                 Member[]
+  organizations          Organization[]
+  sessions               Session[]
+  administeredUniversity University?
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model University {
+  id           Int            @id @default(autoincrement())
+  adminId      String         @unique
+  name         String
+  description  String?
+  location     String
+  organization Organization[]
+  admin        User           @relation(fields: [adminId], references: [id])
+}
+
+model Organization {
+  id           Int        @id @default(autoincrement())
+  name         String
+  adminId      String?
+  universityId Int
+  description  String?
+  events       Event[]
+  members      Member[]
+  university   University @relation(fields: [universityId], references: [id])
+  admin        User?      @relation(fields: [adminId], references: [id])
+}
+
+model Member {
+  id             Int          @id @default(autoincrement())
+  userId         String
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  user           User         @relation(fields: [userId], references: [id])
+}
+
+model Event {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  name           String
+  description    String?
+  location       String
+  time           String
+  date           String
+  comments       Comment[]
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model Comment {
+  id      Int    @id @default(autoincrement())
+  eventId Int
+  userId  String
+  text    String
+  rating  Int
+  time    String
+  user    User   @relation(fields: [userId], references: [id])
+  event   Event  @relation(fields: [eventId], references: [id])
 }
